@@ -1,6 +1,6 @@
 # Trevor's morning update
 
-A free cloud check of Trevor's **public 30-minute Hair Cut availability** at [Savills Barbers on Booksy](https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield). An iPhone Shortcut reads the result and shows a native notification.
+A free cloud check of Trevor's **public 30-minute Hair Cut availability for today and tomorrow** at [Savills Barbers on Booksy](https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield). An iPhone Shortcut reads the result and shows a native notification.
 
 This is public availability, not Trevor's private calendar. Available start times can overlap; their count is not a count of customers or capacity. Breaks, blocked time and actual bookings cannot be distinguished. The checker never presses Continue or submits a booking, signs in to Booksy, or accesses customer details.
 
@@ -12,9 +12,11 @@ Use this URL in Shortcuts:
 https://raw.githubusercontent.com/MathewO/trevor-morning-update/main/status.json
 ```
 
-The feed is publicly readable and contains the date, check time, service, available start times and a notification message. No account token is needed on the phone. Always check its date before using it.
+The feed is publicly readable and contains the date, check time, service, a `days` list with separate results for today and tomorrow, and one combined `message`. Sunday and Monday are labelled as regular days off. No account token is needed on the phone. Always check its date before using it.
 
-GitHub runs the checker at **06:17, 06:47 and 07:17 UK time, Tuesday–Saturday**. London daylight saving is handled by the workflow timezone. GitHub schedules can be delayed or dropped. Run it manually under **Actions → Update Trevor availability → Run workflow** whenever a fresh test is needed.
+GitHub is scheduled to run the checker **every 15 minutes, all day Tuesday–Saturday**, at minutes **02, 17, 32 and 47** of each hour in UK time. London daylight saving is handled by the workflow timezone. GitHub schedules can be delayed or dropped, and the public file may take a few minutes to refresh through GitHub's cache; this is not a guaranteed maximum data age. Each message includes its check time. Run it manually under **Actions → Update Trevor availability → Run workflow** whenever a fresh test is needed.
+
+Run the existing Shortcut whenever you want to see the latest saved result. It automatically displays both days as long as **Show Notification uses the `message` Dictionary Value**. No GitHub token or extra hosting is needed. The cloud checks do not trigger phone notifications themselves; keep the morning phone automation and use the Shortcut manually during the day. For a longer result, expand the notification or use **Show Result** in a separate manual shortcut.
 
 ## First iPhone test (latest iOS)
 
@@ -24,7 +26,7 @@ Create a normal shortcut named **Trevor's day** with these actions:
 2. **Get Contents of URL** — use the URL, method GET.
 3. **Get Dictionary from Input** — use Contents of URL. This explicitly parses GitHub's JSON text.
 4. **Get Dictionary Value** — get the value for key `message` from Dictionary.
-5. **Show Notification** — use Dictionary Value as the body; set the title to `Trevor's day`.
+5. **Show Notification** — use the output of Get Dictionary Value as the body; set the title to `Trevor's day`. Do not use Contents of URL or the whole Dictionary, which would display raw JSON.
 
 Run once with the phone unlocked and allow the request to `raw.githubusercontent.com` when asked. Check the displayed date and check time against the current feed. This first test has no schedule and no stale-data protection; add the checks below before scheduling it.
 
@@ -38,12 +40,12 @@ After **Get Dictionary from Input**, save its output with **Set Variable** named
    - **Get Dictionary Value** for `checked_at` from `Feed`.
    - **Get Dates from Input**, using that value.
    - **Get Time Between Dates**, from that date to Current Date, in minutes.
-   - **If** the time difference **is between** `0` and `180`:
+   - **If** the time difference **is between** `0` and `45`:
      - Get `message` from `Feed` and **Show Notification** with that message.
    - **Otherwise:** show `Today's update needs refreshing. Please check Booksy.`
 4. **Otherwise:** show `Today's update isn't ready. Please check Booksy.`
 
-An explicit checker failure has `ok: false`, `status: error` and a clear failure message. It must not be treated as a successful daily update for the backup logic below. An internet/request failure may stop the Shortcut with an iOS error; do not mark that attempt successful.
+An explicit checker failure has `ok: false` and a clear failure message beside the affected day. The overall status is `partial_error` when one day succeeds, or `error` when both fail. A successful day's times remain visible even if the other day fails, but the combined report must not be treated as a successful daily update for the backup logic below. An internet/request failure may stop the Shortcut with an iOS error; do not mark that attempt successful.
 
 ## Morning automation
 
@@ -58,7 +60,7 @@ Use a separate **Trevor morning check** shortcut for automatic runs, keeping **T
 - Store a local text file such as `Shortcuts/Trevor/last-success.txt`, initially `never`. Set file actions to this fixed location and disable Ask Where to Save.
 - At the start of the automatic shortcut, read this file. If its contents equal today's `yyyy-MM-dd` date, stop the shortcut.
 - Perform the same fetch, date and age checks. Show the message. Only when `Feed.ok` is true, save today's date to `last-success.txt` (overwrite enabled). Never save success after an error or stale result.
-- Run this automatic shortcut at 07:00 and again at 07:30 on working days. The 07:30 run follows the 07:17 cloud retry. Optionally also run it when a chosen app is opened, before 10:00, to catch a phone that was off earlier.
+- Run this automatic shortcut at 07:00 and again at 07:30 on working days. Regular cloud checks continue between these attempts. Optionally also run it when a chosen app is opened, before 10:00, to catch a phone that was off earlier.
 - Test the local file access while locked. A completed notification action does not prove the notification was read. iOS does not guarantee replay of missed time-based runs.
 
 For a first test, establish the basic scheduled notification before adding duplicate suppression.
@@ -69,7 +71,7 @@ Long-press the normal shortcut → **Share → Copy iCloud Link**. Trevor opens 
 
 ## Verification and maintenance
 
-The cloud run checks the selected date, year, staff and 30-minute service. It requires an explicit no-availability message before reporting no online availability. Unexpected content, page failures or format changes produce an error result with no old times. The workflow fails visibly while publishing that explicit error when possible.
+For each working day, the cloud run checks the selected date, year, staff and 30-minute service. It requires an explicit no-availability message before reporting no online availability. Unexpected content, page failures or format changes produce an error result for that day with no old times. The workflow fails visibly while publishing any partial results and explicit errors when possible. Diagnostics are stored separately by date.
 
 Public widget screenshots are retained as GitHub Actions artifacts for three days for troubleshooting. Public-repository schedules may be disabled after 60 days without repository activity; the generated status commits normally provide activity, but check the Actions page if updates stop. No paid runner or AI service is used.
 
