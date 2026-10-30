@@ -37,7 +37,7 @@ def build_result(target: date, checked: datetime, state: str, slots=(), detail="
         raise ValueError("Only an available result can contain times")
     header = f"Trevor · {target.strftime('%a %d %b')}"
     message = f"{header}\n{availability_text(state, clean)}"
-    message += f"\nChecked {checked.astimezone(LONDON).strftime('%H:%M')} UK time."
+    message += f"\nAI Checked @ {checked.astimezone(LONDON).strftime('%H:%M')} UK time"
     return {
         "schema_version": 1,
         "date": target.isoformat(),
@@ -62,11 +62,11 @@ def build_feed(target: date, checked: datetime, days):
     if [day["date"] for day in days] != expected_dates:
         raise ValueError("The feed must contain today and tomorrow, in order")
     ok = all(day["ok"] for day in days)
-    sections = ["Trevor · TODAY & TOMORROW"]
-    for label, day in zip(("TODAY", "TOMORROW"), days):
+    sections = ["Trevor · Today & Tomorrow"]
+    for label, day in zip(("Today", "Tomorrow"), days):
         day_date = date.fromisoformat(day["date"])
         sections.append(f"{label} · {day_date:%a %d %b}\n" + availability_text(day["status"], day["available_start_times"]))
-    sections.append(f"Checked {checked.astimezone(LONDON):%H:%M} UK time.")
+    sections.append(f"AI Checked @ {checked.astimezone(LONDON):%H:%M} UK time")
     return {
         "schema_version": 2,
         "date": target.isoformat(),
