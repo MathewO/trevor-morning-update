@@ -9,9 +9,7 @@ on:
       - requirements.txt
       - .github/workflows/update.yml
   schedule:
-    - cron: '17,47 6 * * 2-6'
-      timezone: Europe/London
-    - cron: '17 7 * * 2-6'
+    - cron: '2,17,32,47 * * * 2-6'
       timezone: Europe/London
 
 permissions:
