@@ -1,6 +1,8 @@
 import unittest
-from datetime import date, datetime
-from checker import build_result, validate_snapshot, LONDON
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from unittest.mock import patch
+from checker import build_feed, build_result, check_day, validate_snapshot, LONDON
 
 
 class SafetyTests(unittest.TestCase):
@@ -51,6 +53,45 @@ class SafetyTests(unittest.TestCase):
         winter = build_result(self.day, self.now, "day_off")
         self.assertTrue(summer["checked_at"].endswith("+01:00"))
         self.assertTrue(winter["checked_at"].endswith("+00:00"))
+
+    def test_today_and_tomorrow_keep_their_own_times(self):
+        days = [build_result(self.day, self.now, "available", ["17:30"]),
+                build_result(self.day + timedelta(days=1), self.now, "available", ["11:30", "14:00"])]
+        feed = build_feed(self.day, self.now, days)
+        self.assertTrue(feed["ok"])
+        self.assertEqual(feed["date"], "2026-10-30")
+        self.assertIn("Today · Fri 30 Oct\n1 haircut start time available: 17:30.", feed["message"])
+        self.assertIn("Tomorrow · Sat 31 Oct\n2 haircut start times available: 11:30, 14:00.", feed["message"])
+
+    def test_tomorrow_failure_keeps_today_but_marks_feed_incomplete(self):
+        with patch("checker.check", side_effect=[(["17:30"], "verified"), TimeoutError("test timeout")]):
+            days = [check_day(self.day + timedelta(days=i), Path("diagnostics")) for i in range(2)]
+        feed = build_feed(self.day, self.now, days)
+        self.assertFalse(feed["ok"])
+        self.assertEqual(feed["status"], "partial_error")
+        self.assertEqual(feed["days"][0]["available_start_times"], ["17:30"])
+        self.assertEqual(feed["days"][1]["available_start_times"], [])
+        self.assertIn("Tomorrow · Sat 31 Oct\nCouldn't verify availability", feed["message"])
+
+    def test_sunday_is_day_off_without_requesting_booksy(self):
+        saturday = date(2026, 10, 31)
+        with patch("checker.check") as browser_check:
+            sunday = check_day(saturday + timedelta(days=1), Path("diagnostics"))
+            browser_check.assert_not_called()
+        feed = build_feed(saturday, self.now, [build_result(saturday, self.now, "available", ["11:30"]), sunday])
+        self.assertTrue(feed["ok"])
+        self.assertIn("Tomorrow · Sun 01 Nov\nDay off", feed["message"])
+
+    def test_tomorrow_rolls_over_into_new_year(self):
+        start = date(2026, 12, 31)
+        days = [build_result(start + timedelta(days=i), self.now, "no_online_availability") for i in range(2)]
+        feed = build_feed(start, self.now, days)
+        self.assertEqual(feed["days"][1]["date"], "2027-01-01")
+
+    def test_rejects_duplicate_day_in_two_day_feed(self):
+        today = build_result(self.day, self.now, "available", ["17:30"])
+        with self.assertRaises(ValueError):
+            build_feed(self.day, self.now, [today, today])
 
 
 if __name__ == "__main__":
