@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 import re
 import time
@@ -16,6 +16,17 @@ EMPTY = "There is no availability left on this date"
 WORKDAYS = {1, 2, 3, 4, 5}  # Python Monday = 0.
 
 
+def availability_text(state, slots):
+    if state == "available":
+        noun = "start time" if len(slots) == 1 else "start times"
+        return f"{len(slots)} haircut {noun} available: {', '.join(slots)}."
+    if state == "no_online_availability":
+        return "No online haircut availability showing."
+    if state == "day_off":
+        return "Day off (regular working days: Tuesday–Saturday)."
+    return "Couldn't verify availability. Please check Booksy."
+
+
 def build_result(target: date, checked: datetime, state: str, slots=(), detail=""):
     clean = sorted(set(slots))
     if any(not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", t) for t in clean):
@@ -25,15 +36,7 @@ def build_result(target: date, checked: datetime, state: str, slots=(), detail="
     if state != "available" and clean:
         raise ValueError("Only an available result can contain times")
     header = f"Trevor · {target.strftime('%a %d %b')}"
-    if state == "available":
-        noun = "start time" if len(clean) == 1 else "start times"
-        message = f"{header}\n{len(clean)} haircut {noun} available: {', '.join(clean)}."
-    elif state == "no_online_availability":
-        message = f"{header}\nNo online haircut availability showing for this date."
-    elif state == "day_off":
-        message = f"{header}\nNot a regular working day (Tuesday–Saturday)."
-    else:
-        message = f"{header}\nCouldn't verify today's availability. Please check Booksy."
+    message = f"{header}\n{availability_text(state, clean)}"
     message += f"\nChecked {checked.astimezone(LONDON).strftime('%H:%M')} UK time."
     return {
         "schema_version": 1,
@@ -51,6 +54,33 @@ def build_result(target: date, checked: datetime, state: str, slots=(), detail="
         "source_url": URL,
         "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable.",
         "detail": detail,
+    }
+
+
+def build_feed(target: date, checked: datetime, days):
+    expected_dates = [(target + timedelta(days=i)).isoformat() for i in range(2)]
+    if [day["date"] for day in days] != expected_dates:
+        raise ValueError("The feed must contain today and tomorrow, in order")
+    ok = all(day["ok"] for day in days)
+    sections = ["Trevor · today & tomorrow"]
+    for label, day in zip(("Today", "Tomorrow"), days):
+        day_date = date.fromisoformat(day["date"])
+        sections.append(f"{label} · {day_date:%a %d %b}\n" + availability_text(day["status"], day["available_start_times"]))
+    sections.append(f"Checked {checked.astimezone(LONDON):%H:%M} UK time.")
+    return {
+        "schema_version": 2,
+        "date": target.isoformat(),
+        "checked_at": checked.astimezone(LONDON).isoformat(timespec="seconds"),
+        "timezone": "Europe/London",
+        "ok": ok,
+        "status": "ok" if ok else ("partial_error" if any(day["ok"] for day in days) else "error"),
+        "staff": "Trevor",
+        "service": "Hair Cut",
+        "duration_minutes": 30,
+        "days": days,
+        "message": "\n\n".join(sections),
+        "source_url": URL,
+        "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable.",
     }
 
 
@@ -162,29 +192,31 @@ def check(target, diagnostics):
             browser.close()
 
 
+def check_day(target, diagnostics):
+    if target.weekday() not in WORKDAYS:
+        return build_result(target, datetime.now(LONDON), "day_off")
+    try:
+        times, detail = check(target, diagnostics / target.isoformat())
+        return build_result(target, datetime.now(LONDON), "available" if times else "no_online_availability", times, detail)
+    except Exception as exc:
+        # A failed day must not erase the other day or borrow its times.
+        print(f"CHECK FAILED ({target}): {type(exc).__name__}: {exc}")
+        return build_result(target, datetime.now(LONDON), "error", detail=type(exc).__name__)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--date", type=date.fromisoformat, help="Optional diagnostic date within the displayed week")
+    parser.add_argument("--date", type=date.fromisoformat, help="Optional diagnostic start date; also checks the next day")
     parser.add_argument("--output", default="status.json")
     args = parser.parse_args()
-    started = datetime.now(LONDON)
-    target = args.date or started.date()
-    diagnostics = Path("diagnostics")
-    if target.weekday() not in WORKDAYS:
-        result = build_result(target, started, "day_off")
-    else:
-        try:
-            times, detail = check(target, diagnostics)
-            result = build_result(target, datetime.now(LONDON), "available" if times else "no_online_availability", times, detail)
-        except Exception as exc:
-            # Never substitute old data, another barber, or 'fully booked' for a failure.
-            result = build_result(target, datetime.now(LONDON), "error", detail=type(exc).__name__)
-            print(f"CHECK FAILED: {type(exc).__name__}: {exc}")
+    target = args.date or datetime.now(LONDON).date()
+    days = [check_day(target + timedelta(days=i), Path("diagnostics")) for i in range(2)]
+    result = build_feed(target, datetime.now(LONDON), days)
     Path(args.output).write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(result["message"])
     if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(summary, "a", encoding="utf-8") as stream:
-            stream.write("## Trevor's public availability\n\n" + result["message"] + "\n\nStatus: **" + result["status"] + "**\n")
+            stream.write("## Trevor's public availability\n\n" + result["message"].replace("\n", "  \n") + "\n\nStatus: **" + result["status"] + "**\n")
     return 0 if result["ok"] else 1
 
 
