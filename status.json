@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "checked_at": "2026-10-30T14:54:40+00:00",
+  "timezone": "Europe/London",
+  "ok": false,
+  "status": "error",
+  "staff": "Trevor",
+  "service": "Hair Cut",
+  "duration_minutes": 30,
+  "available_start_times": [],
+  "available_start_count": null,
+  "message": "Trevor · Fri 30 Oct\nCouldn't verify today's availability. Please check Booksy.\nChecked 14:54 UK time.",
+  "source_url": "https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield",
+  "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable.",
+  "detail": "TimeoutError"
+}
