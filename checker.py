@@ -18,10 +18,10 @@ WORKDAYS = {1, 2, 3, 4, 5}  # Python Monday = 0.
 
 def availability_text(state, slots):
     if state == "available":
-        noun = "start time" if len(slots) == 1 else "start times"
-        return f"{len(slots)} haircut {noun} available: {', '.join(slots)}."
+        noun = "slot" if len(slots) == 1 else "slots"
+        return f"{len(slots)} × 30-minute haircut {noun} available: {', '.join(slots)}."
     if state == "no_online_availability":
-        return "No online haircut availability showing."
+        return "No 30-minute haircut slots available online."
     if state == "day_off":
         return "Day off (regular working days: Tuesday–Saturday)."
     return "Couldn't verify availability. Please check Booksy."
@@ -62,8 +62,8 @@ def build_feed(target: date, checked: datetime, days):
     if [day["date"] for day in days] != expected_dates:
         raise ValueError("The feed must contain today and tomorrow, in order")
     ok = all(day["ok"] for day in days)
-    sections = ["Trevor · today & tomorrow"]
-    for label, day in zip(("Today", "Tomorrow"), days):
+    sections = ["Trevor · TODAY & TOMORROW"]
+    for label, day in zip(("TODAY", "TOMORROW"), days):
         day_date = date.fromisoformat(day["date"])
         sections.append(f"{label} · {day_date:%a %d %b}\n" + availability_text(day["status"], day["available_start_times"]))
     sections.append(f"Checked {checked.astimezone(LONDON):%H:%M} UK time.")
