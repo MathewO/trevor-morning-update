@@ -84,6 +84,6 @@ python -m unittest -v
 python checker.py
 ```
 
-Cloud verification passed on **30 October 2026 at 14:59 UK time**: the checker selected Trevor and reported one start time, **17:30**, for the 30-minute Hair Cut. All seven safeguard tests passed. [Successful cloud run](https://github.com/MathewO/trevor-morning-update/actions/runs/41076421045).
+Cloud verification passed on **30 October 2026 at 15:29 UK time**: the checker selected Trevor separately for each date and reported **17:30 today**, and **11:30, 13:30 and 14:00 tomorrow**, for the 30-minute Hair Cut. All **12** safeguard tests passed, including separate dates, partial failures, days off and date rollover. [Successful two-day cloud run](https://github.com/MathewO/trevor-morning-update/actions/runs/41080962455).
 
 The actual iPhone notification and locked-screen automation test are still to be completed on the phone. Treat this as a prototype until those pass.
