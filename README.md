@@ -22,14 +22,15 @@ Create a normal shortcut named **Trevor's day** with these actions:
 
 1. **URL** — paste the feed URL above.
 2. **Get Contents of URL** — use the URL, method GET.
-3. **Get Dictionary Value** — get the value for key `message` from Contents of URL.
-4. **Show Notification** — use Dictionary Value as the body; set the title to `Trevor's day`.
+3. **Get Dictionary from Input** — use Contents of URL. This explicitly parses GitHub's JSON text.
+4. **Get Dictionary Value** — get the value for key `message` from Dictionary.
+5. **Show Notification** — use Dictionary Value as the body; set the title to `Trevor's day`.
 
 Run once with the phone unlocked and allow the request to `raw.githubusercontent.com` when asked. Check the displayed date and check time against the current feed. This first test has no schedule and no stale-data protection; add the checks below before scheduling it.
 
 ## Add freshness protection before scheduling
 
-After **Get Contents of URL**, save its output with **Set Variable** named `Feed`. Then:
+After **Get Dictionary from Input**, save its output with **Set Variable** named `Feed`. Then:
 
 1. **Current Date**, then **Format Date** with Custom format `yyyy-MM-dd`. Save that result as `Today`. Use the UK date; keep the phone on UK time for this setup.
 2. **Get Dictionary Value** for `date` from `Feed`.
@@ -81,4 +82,6 @@ python -m unittest -v
 python checker.py
 ```
 
-The repository and feed are a prototype until a successful cloud run and the actual iPhone notification test have both been verified.
+Cloud verification passed on **30 October 2026 at 14:59 UK time**: the checker selected Trevor and reported one start time, **17:30**, for the 30-minute Hair Cut. All seven safeguard tests passed. [Successful cloud run](https://github.com/MathewO/trevor-morning-update/actions/runs/41076421045).
+
+The actual iPhone notification and locked-screen automation test are still to be completed on the phone. Treat this as a prototype until those pass.
