@@ -124,13 +124,15 @@ def check(target, diagnostics):
             frame = page.frame_locator('iframe[title="Booking widget"]')
             day = frame.get_by_test_id(f"weekday-button-{target:%d-%m}")
             day.wait_for(state="visible")
-            day.click()
             initial = settle(frame)
+            if initial["selected_date"] != f"weekday-button-{target:%d-%m}":
+                day.click()
+                initial = settle(frame)
             validate_snapshot(initial, target, require_staff=False)
             if initial["empty"]:
                 # No preference has no slots: no barber offers this service today.
                 return [], "No-preference search also returned no availability."
-            frame.get_by_role("button", name="Change", exact=True).click()
+            frame.locator("button.change-button").click()
             frame.get_by_text("Choose Staffer", exact=True).wait_for(state="visible")
             frame.get_by_text("Trevor", exact=True).click()
             frame.get_by_text("Choose Staffer", exact=True).wait_for(state="hidden")
@@ -149,7 +151,10 @@ def check(target, diagnostics):
                 page.screenshot(path=str(diagnostics / "failure.png"), full_page=False)
                 # Only the public widget or a short error description is logged.
                 if frame is not None:
-                    (diagnostics / "widget.txt").write_text(frame.locator("body").inner_text(timeout=3000), encoding="utf-8")
+                    widget_text = frame.locator("body").inner_text(timeout=3000)
+                    (diagnostics / "widget.txt").write_text(widget_text, encoding="utf-8")
+                    print("PUBLIC WIDGET AT FAILURE:\n" + widget_text[:4000])
+                    print("VISIBLE BUTTON LABELS:", frame.locator("button").all_text_contents())
             except Exception:
                 pass
             raise
