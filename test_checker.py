@@ -60,8 +60,8 @@ class SafetyTests(unittest.TestCase):
         feed = build_feed(self.day, self.now, days)
         self.assertTrue(feed["ok"])
         self.assertEqual(feed["date"], "2026-10-30")
-        self.assertIn("Today · Fri 30 Oct\n1 haircut start time available: 17:30.", feed["message"])
-        self.assertIn("Tomorrow · Sat 31 Oct\n2 haircut start times available: 11:30, 14:00.", feed["message"])
+        self.assertIn("TODAY · Fri 30 Oct\n1 × 30-minute haircut slot available: 17:30.", feed["message"])
+        self.assertIn("TOMORROW · Sat 31 Oct\n2 × 30-minute haircut slots available: 11:30, 14:00.", feed["message"])
 
     def test_tomorrow_failure_keeps_today_but_marks_feed_incomplete(self):
         with patch("checker.check", side_effect=[(["17:30"], "verified"), TimeoutError("test timeout")]):
@@ -71,7 +71,7 @@ class SafetyTests(unittest.TestCase):
         self.assertEqual(feed["status"], "partial_error")
         self.assertEqual(feed["days"][0]["available_start_times"], ["17:30"])
         self.assertEqual(feed["days"][1]["available_start_times"], [])
-        self.assertIn("Tomorrow · Sat 31 Oct\nCouldn't verify availability", feed["message"])
+        self.assertIn("TOMORROW · Sat 31 Oct\nCouldn't verify availability", feed["message"])
 
     def test_sunday_is_day_off_without_requesting_booksy(self):
         saturday = date(2026, 10, 31)
@@ -80,7 +80,7 @@ class SafetyTests(unittest.TestCase):
             browser_check.assert_not_called()
         feed = build_feed(saturday, self.now, [build_result(saturday, self.now, "available", ["11:30"]), sunday])
         self.assertTrue(feed["ok"])
-        self.assertIn("Tomorrow · Sun 01 Nov\nDay off", feed["message"])
+        self.assertIn("TOMORROW · Sun 01 Nov\nDay off", feed["message"])
 
     def test_tomorrow_rolls_over_into_new_year(self):
         start = date(2026, 12, 31)
