@@ -1,0 +1,68 @@
+name: Update Trevor availability
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - checker.py
+      - test_checker.py
+      - requirements.txt
+      - .github/workflows/update.yml
+  schedule:
+    - cron: '17,47 6 * * 2-6'
+      timezone: Europe/London
+    - cron: '17 7 * * 2-6'
+      timezone: Europe/London
+
+permissions:
+  contents: write
+
+concurrency:
+  group: trevor-availability
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install checker
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Verify parsing safeguards
+        run: python -m unittest -v
+      - name: Read public Booksy availability
+        id: availability
+        continue-on-error: true
+        run: python checker.py
+      - name: Publish current status, including explicit failures
+        if: always()
+        run: |
+          if [ ! -f status.json ]; then
+            echo "No result was produced; preserving the old timestamp for the Shortcut freshness check."
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add status.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh public availability status'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Save public booking-widget evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: booking-widget-evidence
+          path: diagnostics/
+          retention-days: 3
+          if-no-files-found: ignore
+      - name: Flag a failed availability check
+        if: steps.availability.outcome == 'failure'
+        run: exit 1
