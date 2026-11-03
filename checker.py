@@ -16,6 +16,17 @@ EMPTY = "There is no availability left on this date"
 WORKDAYS = {1, 2, 3, 4, 5}  # Python Monday = 0.
 
 
+def normalize_times(times):
+    """Booksy renders morning hours as either 9:30 or 09:30."""
+    clean = set()
+    for value in times:
+        if not isinstance(value, str) or not re.fullmatch(r"(?:[01]?[0-9]|2[0-3]):[0-5][0-9]", value):
+            raise ValueError("Unexpected time format; refusing to publish slots")
+        hour, minute = value.split(":")
+        clean.add(f"{int(hour):02d}:{minute}")
+    return sorted(clean)
+
+
 def availability_text(state, slots):
     if state == "available":
         noun = "slot" if len(slots) == 1 else "slots"
@@ -28,9 +39,7 @@ def availability_text(state, slots):
 
 
 def build_result(target: date, checked: datetime, state: str, slots=(), detail=""):
-    clean = sorted(set(slots))
-    if any(not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", t) for t in clean):
-        raise ValueError("Unexpected time format; refusing to publish slots")
+    clean = normalize_times(slots)
     if state == "available" and not clean:
         raise ValueError("Available result must contain at least one time")
     if state != "available" and clean:
@@ -99,9 +108,7 @@ def validate_snapshot(snapshot, target, require_staff=True):
     times = snapshot["times"]
     if not times:
         raise ValueError("No times and no explicit empty-state message")
-    if any(not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", t) for t in times):
-        raise ValueError("Unexpected time format")
-    return sorted(set(times))
+    return normalize_times(times)
 
 
 def snapshot(frame):
@@ -132,6 +139,60 @@ def settle(frame, seconds=3, timeout=35):
     raise TimeoutError("Booking widget did not produce stable results")
 
 
+def calendar_direction(date_ids, target):
+    """Choose a strip direction; year/staff are still verified after selection."""
+    dates = []
+    for date_id in date_ids:
+        match = re.fullmatch(r"weekday-button-([0-9]{2})-([0-9]{2})", date_id)
+        if not match:
+            raise ValueError("Unexpected calendar date label")
+        day, month = map(int, match.groups())
+        candidates = []
+        for year in (target.year - 1, target.year, target.year + 1):
+            try:
+                candidates.append(date(year, month, day))
+            except ValueError:
+                pass
+        if not candidates:
+            raise ValueError("Invalid calendar date")
+        dates.append(min(candidates, key=lambda d: abs((d - target).days)))
+    if dates and target < min(dates):
+        return "prev"
+    if dates and target > max(dates):
+        return "next"
+    raise ValueError("Requested date is missing from the booking calendar")
+
+
+def select_date(frame, target):
+    """Recover when Booksy opens its virtual date strip at the next free day."""
+    date_strip = frame.locator('[data-testid^="weekday-button-"]')
+    date_strip.first.wait_for(state="visible")
+    day = frame.get_by_test_id(f"weekday-button-{target:%d-%m}")
+
+    def rendered_dates():
+        return date_strip.evaluate_all("es => es.map(e => e.getAttribute('data-testid'))")
+
+    for _ in range(12):
+        if day.count() == 1:
+            day.click()
+            result = settle(frame)
+            if result["selected_date"] != f"weekday-button-{target:%d-%m}":
+                raise ValueError("Booksy did not select the requested date")
+            return result
+        before = rendered_dates()
+        direction = calendar_direction(before, target)
+        control = frame.get_by_test_id(f"weekdays-control-{direction}")
+        if control.count() != 1 or not control.is_visible() or "disabled" in (control.get_attribute("class") or "").split():
+            raise ValueError("Requested date cannot be reached in the booking calendar")
+        control.click()
+        deadline = time.monotonic() + 5
+        while rendered_dates() == before:
+            if time.monotonic() >= deadline:
+                raise ValueError("Booking calendar did not move to the requested date")
+            time.sleep(0.25)
+    raise ValueError("Requested date is beyond the checked calendar range")
+
+
 def check(target, diagnostics):
     from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
     with sync_playwright() as p:
@@ -152,25 +213,19 @@ def check(target, diagnostics):
             widget = page.locator('iframe[title="Booking widget"]')
             widget.wait_for(state="visible")
             frame = page.frame_locator('iframe[title="Booking widget"]')
-            day = frame.get_by_test_id(f"weekday-button-{target:%d-%m}")
-            day.wait_for(state="visible")
-            initial = settle(frame)
-            if initial["selected_date"] != f"weekday-button-{target:%d-%m}":
-                day.click()
-                initial = settle(frame)
+            initial = select_date(frame, target)
             validate_snapshot(initial, target, require_staff=False)
             if initial["empty"]:
                 # No preference has no slots: no barber offers this service today.
                 return [], "No-preference search also returned no availability."
-            frame.locator("button.change-button").click()
+            frame.get_by_test_id("change-staffer-button").click()
             frame.get_by_text("Choose Staffer", exact=True).wait_for(state="visible")
             frame.get_by_text("Trevor", exact=True).click()
             frame.get_by_text("Choose Staffer", exact=True).wait_for(state="hidden")
             selected = settle(frame)
             # Changing staff can change the date; explicitly reselect the target.
             if selected["selected_date"] != f"weekday-button-{target:%d-%m}":
-                day.click()
-                selected = settle(frame)
+                selected = select_date(frame, target)
             times = validate_snapshot(selected, target, require_staff=not selected["empty"])
             diagnostics.mkdir(parents=True, exist_ok=True)
             widget.screenshot(path=str(diagnostics / "verified-widget.png"))
