@@ -75,6 +75,12 @@ For each working day, the cloud run checks the selected date, year, staff and 30
 
 Public widget screenshots are retained as GitHub Actions artifacts for three days for troubleshooting. Public-repository schedules may be disabled after 60 days without repository activity; the generated status commits normally provide activity, but check the Actions page if updates stop. No paid runner or AI service is used.
 
+### Failures investigated on 3 November 2026
+
+Two checker bugs caused the reported errors. Booksy displayed morning times such as `9:30`, which the old parser rejected because it expected `09:30`. The checker now accepts both and publishes consistent `HH:MM` times. On Saturday, the widget opened its date strip at the next available day, leaving the requested date outside the rendered calendar. The checker now navigates back or forward to the requested date before validating the result, including after selecting Trevor. An unreachable date still produces an error; it is never treated as proof that he is fully booked.
+
+The run history also showed gaps of several hours despite the correct 15-minute schedule. Fixing the checker does not guarantee GitHub's scheduling frequency. Keep the Shortcut's date and age checks enabled, and inspect `AI Checked @` before relying on the result. No change to the existing Shortcut's `message` field is needed for these repairs.
+
 Local validation:
 
 ```
@@ -84,6 +90,6 @@ python -m unittest -v
 python checker.py
 ```
 
-Cloud verification passed on **30 October 2026 at 15:29 UK time**: the checker selected Trevor separately for each date and reported **17:30 today**, and **11:30, 13:30 and 14:00 tomorrow**, for the 30-minute Hair Cut. All **12** safeguard tests passed, including separate dates, partial failures, days off and date rollover. [Successful two-day cloud run](https://github.com/MathewO/trevor-morning-update/actions/runs/41080962455).
+Cloud verification passed on **3 November 2026 at 07:54 UK time** after these repairs: the checker selected Trevor separately for each date and reported **4 available starts today** and **12 tomorrow** for the 30-minute Hair Cut. All **16** safeguard tests passed, including single-digit hours, calendar navigation, separate dates, partial failures, days off and date rollover. [Successful repaired cloud run](https://github.com/MathewO/trevor-morning-update/actions/runs/41599341566). These counts are a historical verification result; use the live feed for current availability.
 
 The actual iPhone notification and locked-screen automation test are still to be completed on the phone. Treat this as a prototype until those pass.
