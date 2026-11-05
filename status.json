@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "date": "2026-11-05",
-  "checked_at": "2026-11-05T08:31:32+00:00",
+  "checked_at": "2026-11-05T16:42:44+00:00",
   "timezone": "Europe/London",
   "ok": true,
   "status": "ok",
@@ -12,7 +12,7 @@
     {
       "schema_version": 1,
       "date": "2026-11-05",
-      "checked_at": "2026-11-05T08:31:07+00:00",
+      "checked_at": "2026-11-05T16:42:21+00:00",
       "timezone": "Europe/London",
       "ok": true,
       "status": "available",
@@ -20,15 +20,10 @@
       "service": "Hair Cut",
       "duration_minutes": 30,
       "available_start_times": [
-        "10:30",
-        "11:00",
-        "11:30",
-        "15:00",
-        "17:00",
         "18:00"
       ],
-      "available_start_count": 6,
-      "message": "Trevor · Thu 05 Nov\n6 × 30-minute haircut slots available: 10:30, 11:00, 11:30, 15:00, 17:00, 18:00.\nAI Checked @ 08:31 UK time",
+      "available_start_count": 1,
+      "message": "Trevor · Thu 05 Nov\n1 × 30-minute haircut slot available: 18:00.\nAI Checked @ 16:42 UK time",
       "source_url": "https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield",
       "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable.",
       "detail": "Selected Trevor and verified date and 30-minute Hair Cut service."
@@ -36,7 +31,7 @@
     {
       "schema_version": 1,
       "date": "2026-11-06",
-      "checked_at": "2026-11-05T08:31:32+00:00",
+      "checked_at": "2026-11-05T16:42:44+00:00",
       "timezone": "Europe/London",
       "ok": true,
       "status": "available",
@@ -48,8 +43,6 @@
         "10:00",
         "10:30",
         "11:00",
-        "13:30",
-        "14:00",
         "14:30",
         "15:00",
         "16:00",
@@ -57,14 +50,14 @@
         "17:00",
         "17:30"
       ],
-      "available_start_count": 12,
-      "message": "Trevor · Fri 06 Nov\n12 × 30-minute haircut slots available: 09:00, 10:00, 10:30, 11:00, 13:30, 14:00, 14:30, 15:00, 16:00, 16:30, 17:00, 17:30.\nAI Checked @ 08:31 UK time",
+      "available_start_count": 10,
+      "message": "Trevor · Fri 06 Nov\n10 × 30-minute haircut slots available: 09:00, 10:00, 10:30, 11:00, 14:30, 15:00, 16:00, 16:30, 17:00, 17:30.\nAI Checked @ 16:42 UK time",
       "source_url": "https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield",
       "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable.",
       "detail": "Selected Trevor and verified date and 30-minute Hair Cut service."
     }
   ],
-  "message": "Trevor · Today & Tomorrow\n\nToday · Thu 05 Nov\n6 × 30-minute haircut slots available: 10:30, 11:00, 11:30, 15:00, 17:00, 18:00.\n\nTomorrow · Fri 06 Nov\n12 × 30-minute haircut slots available: 09:00, 10:00, 10:30, 11:00, 13:30, 14:00, 14:30, 15:00, 16:00, 16:30, 17:00, 17:30.\n\nAI Checked @ 08:31 UK time",
+  "message": "Trevor · Today & Tomorrow\n\nToday · Thu 05 Nov\n1 × 30-minute haircut slot available: 18:00.\n\nTomorrow · Fri 06 Nov\n10 × 30-minute haircut slots available: 09:00, 10:00, 10:30, 11:00, 14:30, 15:00, 16:00, 16:30, 17:00, 17:30.\n\nAI Checked @ 16:42 UK time",
   "source_url": "https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield",
   "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable."
 }
