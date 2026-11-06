@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "date": "2026-11-05",
-  "checked_at": "2026-11-05T16:42:44+00:00",
+  "date": "2026-11-06",
+  "checked_at": "2026-11-06T02:49:56+00:00",
   "timezone": "Europe/London",
   "ok": true,
   "status": "ok",
@@ -11,27 +11,8 @@
   "days": [
     {
       "schema_version": 1,
-      "date": "2026-11-05",
-      "checked_at": "2026-11-05T16:42:21+00:00",
-      "timezone": "Europe/London",
-      "ok": true,
-      "status": "available",
-      "staff": "Trevor",
-      "service": "Hair Cut",
-      "duration_minutes": 30,
-      "available_start_times": [
-        "18:00"
-      ],
-      "available_start_count": 1,
-      "message": "Trevor · Thu 05 Nov\n1 × 30-minute haircut slot available: 18:00.\nAI Checked @ 16:42 UK time",
-      "source_url": "https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield",
-      "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable.",
-      "detail": "Selected Trevor and verified date and 30-minute Hair Cut service."
-    },
-    {
-      "schema_version": 1,
       "date": "2026-11-06",
-      "checked_at": "2026-11-05T16:42:44+00:00",
+      "checked_at": "2026-11-06T02:49:34+00:00",
       "timezone": "Europe/London",
       "ok": true,
       "status": "available",
@@ -40,24 +21,44 @@
       "duration_minutes": 30,
       "available_start_times": [
         "09:00",
+        "09:30",
         "10:00",
-        "10:30",
         "11:00",
-        "14:30",
-        "15:00",
-        "16:00",
-        "16:30",
-        "17:00",
-        "17:30"
+        "16:30"
       ],
-      "available_start_count": 10,
-      "message": "Trevor · Fri 06 Nov\n10 × 30-minute haircut slots available: 09:00, 10:00, 10:30, 11:00, 14:30, 15:00, 16:00, 16:30, 17:00, 17:30.\nAI Checked @ 16:42 UK time",
+      "available_start_count": 5,
+      "message": "Trevor · Fri 06 Nov\n5 × 30-minute haircut slots available: 09:00, 09:30, 10:00, 11:00, 16:30.\nAI Checked @ 02:49 UK time",
+      "source_url": "https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield",
+      "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable.",
+      "detail": "Selected Trevor and verified date and 30-minute Hair Cut service."
+    },
+    {
+      "schema_version": 1,
+      "date": "2026-11-07",
+      "checked_at": "2026-11-06T02:49:56+00:00",
+      "timezone": "Europe/London",
+      "ok": true,
+      "status": "available",
+      "staff": "Trevor",
+      "service": "Hair Cut",
+      "duration_minutes": 30,
+      "available_start_times": [
+        "08:00",
+        "08:30",
+        "11:30",
+        "12:00",
+        "12:30",
+        "13:00",
+        "13:30"
+      ],
+      "available_start_count": 7,
+      "message": "Trevor · Sat 07 Nov\n7 × 30-minute haircut slots available: 08:00, 08:30, 11:30, 12:00, 12:30, 13:00, 13:30.\nAI Checked @ 02:49 UK time",
       "source_url": "https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield",
       "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable.",
       "detail": "Selected Trevor and verified date and 30-minute Hair Cut service."
     }
   ],
-  "message": "Trevor · Today & Tomorrow\n\nToday · Thu 05 Nov\n1 × 30-minute haircut slot available: 18:00.\n\nTomorrow · Fri 06 Nov\n10 × 30-minute haircut slots available: 09:00, 10:00, 10:30, 11:00, 14:30, 15:00, 16:00, 16:30, 17:00, 17:30.\n\nAI Checked @ 16:42 UK time",
+  "message": "Trevor · Today & Tomorrow\n\nToday · Fri 06 Nov\n5 × 30-minute haircut slots available: 09:00, 09:30, 10:00, 11:00, 16:30.\n\nTomorrow · Sat 07 Nov\n7 × 30-minute haircut slots available: 08:00, 08:30, 11:30, 12:00, 12:30, 13:00, 13:30.\n\nAI Checked @ 02:49 UK time",
   "source_url": "https://booksy.com/en-gb/6035_savills-barbers_barber_1419956_sheffield",
   "note": "Public bookable start times, not a count of confirmed bookings. Breaks and blocked time are not distinguishable."
 }
